@@ -37,6 +37,9 @@ glimpse(df)
 summary(df)
 ```
 
+#Informal Analysis
+
+##side by side boxplot
 
 ```{r}
 #looking at variability by condition
@@ -45,15 +48,15 @@ ggplot(df, aes(x = type, fill = time, y = sum_engage)) +
 
 ```
 
+##Parallel dot graph
+
 ```{r}
 #looking at variability by condition
 ggplot(df, aes(x = type, color = time, y = sum_engage)) +
     geom_jitter(height = 0.10, width = 0.05, alpha = .7)
-
-
 ```
 
-
+##Interaction effects
 
 ```{r}
 ggplot(df, aes(x = type, 
