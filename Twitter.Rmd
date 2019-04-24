@@ -1,30 +1,166 @@
 ---
 title: "Twitter"
-author: "Jocelyn Hu"
+author: "Caroline Li, Jocelyn Hu, Natalie Labossier"
 date: "April 24, 2019"
 output: html_document
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r, eval= FASLE}
+library(dplyr)
+library(mosaic)
+library(ggplot2)
+library(readr)
+library(tidyr)
+library(tidyverse)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+df<-read.csv("data_twitter - Sheet2.CSV")
 ```
 
-## Including Plots
+```{r}
+day <- c("Wed","Wed","Thurs","Thurs","Fri","Fri","Wed","Wed","Thurs","Thurs","Fri","Fri","Wed","Wed","Thurs","Thurs","Fri","Fri")
+week <- c(rep("1", 6),                                  rep("2",6), rep("3",6))
+df<-cbind(day,df)
+df<-cbind(week,df)
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r sum_engage}
+df<-df%>%
+  mutate(sum_engage=likes_48+retweets_48+comments_48)%>%
+  unite(cell, time, type,remove=FALSE)
+
+```
+```{r}
+
+glimpse(df)
+summary(df)
+```
+
+
+```{r}
+#looking at variability by condition
+ggplot(df, aes(x = type, fill = time, y = sum_engage)) +
+  geom_boxplot()
+
+```
+
+```{r}
+#looking at variability by condition
+ggplot(df, aes(x = type, color = time, y = sum_engage)) +
+    geom_jitter(height = 0.10, width = 0.05, alpha = .7)
+
+
+```
+
+
+
+```{r}
+ggplot(df, aes(x = type, 
+                    y = sum_engage, 
+                    color = time,
+                    group = time)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", se = 0)
+```
+
+
+```{r}
+ggplot(df, aes(x = time, 
+                    y = sum_engage, 
+                    color = type,
+                    group = type)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", se = 0)
+```
+
+```{r}
+df <- df%>%
+  mutate(benchmark = mean(sum_engage)) #universal factor
+```
+
+```{r}
+df <- df %>%
+  group_by(type) %>%
+  mutate(type_mean = mean(sum_engage),
+         type_effect = type_mean - benchmark) 
+#for each level of type factor
+```
+
+```{r}
+df <- df %>%
+  group_by(week) %>%
+  mutate(week_mean = mean(sum_engage),
+         week_effect = week_mean - benchmark) 
+#for each level of type factor
+```
+
+```{r}
+df <- df %>%
+  group_by(day) %>%
+  mutate(day_mean = mean(sum_engage),
+         day_effect = day_mean - benchmark) 
+#for each level of type factor
+```
+
+```{r}
+df <- df %>%
+  group_by(time) %>%
+  mutate(time_mean = mean(sum_engage),
+         time_effect = time_mean - benchmark) 
+#for each level of type factor
+```
+
+```{r}
+df <- df %>%
+  group_by(cell) %>%
+  mutate(cell_mean = mean(sum_engage),
+         interaction_effect = cell_mean - (type_mean + time_mean - benchmark)) #for each cell of interaction
+```
+
+```{r}
+df<- df %>%
+  ungroup() %>%
+  mutate(residuals = sum_engage - (benchmark 
+                             + type_effect 
+                             + time_effect 
+                             + interaction_effect
+                             + day_effect
+                             + week_effect))%>% #universal factor
+  select(-type_mean, -time_mean, 
+         -cell_mean, -day_mean, -week_mean) #removing the stuff we don't need
+  
+```
+
+
+
+#ANOVA
+
+```{r}
+twitter <- aov(sum_engage ~ type+time+day+week+type*time, data = df)
+
+anova(twitter)
+```
+
+#Pairwise tests
+
+```{r}
+df %>%
+  filter( type == "informative" | type == "promotional") %>%
+  t.test(time ~ type, data = .)
+```
+
+
+
+```{r}
+df %>%
+  filter( time == "morning" | time == "afternoon") %>%
+  t.test(type ~ time, data = .)
+```
+
+
+We probably want to adjust for multiple comparisons to control our **experimentwise type I error rate**. 
+
+```{r}
+TukeyHSD(twitter, "type")
+```
