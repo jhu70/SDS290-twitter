@@ -74,6 +74,14 @@ ggplot(df, aes(x = time,
   geom_smooth(method = "lm", se = 0)
 ```
 
+
+# Assembly Line Metaphor
+
+## Assembly Line Instructions
+
+To make the set of assembly instructions, first we calculate the effects of all of our structural factors under the Fisher assumptions. We use the data to calculate all of these effects.
+
+
 ```{r}
 df <- df%>%
   mutate(benchmark = mean(sum_engage)) #universal factor
@@ -149,7 +157,6 @@ df %>%
   filter( type == "informative" | type == "promotional") %>%
   t.test(time ~ type, data = .)
 ```
-
 
 
 ```{r}
