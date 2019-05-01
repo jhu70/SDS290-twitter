@@ -158,7 +158,7 @@ anova(twitter)
 
 ```{r}
 df %>%
-  filter( type == "informative" | type == "promotional") %>%
+  dplyr::filter( type == "informative" | type == "promotional") %>%
   t.test(time ~ type, data = .)
 ```
 
@@ -174,4 +174,17 @@ We probably want to adjust for multiple comparisons to control our **experimentw
 
 ```{r}
 TukeyHSD(twitter, "type")
+```
+
+```{r}
+library(tidyverse)
+df2<-as.data.frame(df)%>%
+  na.omit()%>%
+  select(sum_engage,likes_48,retweets_48,comments_48,type)
+```
+
+```{r}
+library(stargazer)
+stargazer(data = df2, type = "html", title="Summary statistics of DV", digits=2, out="tablesum.html",covariate.labels = c("Total Engagement","#Likes","#Retweets","#Comments","type"))
+
 ```
