@@ -2,9 +2,9 @@
 title: "Twitter"
 author: "Caroline Li, Jocelyn Hu, Natalie Labossier"
 date: "April 24, 2019"
-output: html_document
+output: pdf_document
 ---
-```{r, eval= FASLE}
+```{r}
 library(dplyr)
 library(mosaic)
 library(ggplot2)
@@ -83,7 +83,10 @@ ggplot(df, aes(x = time,
 ## Assembly Line Instructions
 
 To make the set of assembly instructions, first we calculate the effects of all of our structural factors under the Fisher assumptions. We use the data to calculate all of these effects.
-
+```{r}
+df<-df%>%
+  filter(type =="informative"| type =="inspirational")
+```
 
 ```{r}
 df <- df%>%
@@ -143,37 +146,57 @@ df<- df %>%
   
 ```
 
-
+```{r}
+df2<-df%>%
+  filter(type =="informative"| type =="inspirational")
+```
 
 #ANOVA
 
 ```{r}
-twitter <- aov(sum_engage ~ type+time+day+week+type*time, data = df)
+twitter <- aov(sum_engage ~ type+time+day+week+type*time, data = df2)
 
-anova(twitter)
+anova1<-anova(twitter)
+summary(twitter)
+
+#favstats(sum_engage~type|time, data = df2)
+
+# library(mosaic)
+# tally(~time|as.character(type), data = df2)
+# 
+# df2$type
 ```
 
-#Pairwise tests
+
 
 ```{r}
-df %>%
-  dplyr::filter( type == "informative" | type == "promotional") %>%
-  t.test(time ~ type, data = .)
-```
+is.num <- sapply(anova1, is.numeric)
+anova1[is.num] <- lapply(anova1[is.num], round, 3)
+anova1[4,5]<-"0.250"
+anova1[1,5]<-"0.230"
+anova1[1,6]<-""
+anova1[2,6]<-"*"
+anova1[3,6]<-"*"
+anova1[4,6]<-" "
+anova1[5,6]<-" "
+anova1[6,6]<-" "
+anova1[6,5]<-" "
+anova1[6,4]<-" "
+anova2<-anova1[1:6,]
 
+```
 
 ```{r}
-df %>%
-  filter( time == "morning" | time == "afternoon") %>%
-  t.test(type ~ time, data = .)
+library(kableExtra)
+kable(anova2, digits = 3, format = "latex", booktabs = T,col.names = c("Df","Sum Sq","Mean Sq","F value"," Pr(>F)"," "))%>%
+  kable_styling(full_width = F, font_size = 12)%>%add_footnote("Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1", notation="alphabet")%>%column_spec(1, width = "5em") 
 ```
 
 
-We probably want to adjust for multiple comparisons to control our **experimentwise type I error rate**. 
 
-```{r}
-TukeyHSD(twitter, "type")
-```
+#summary statistics
+
+
 
 ```{r}
 library(tidyverse)
