@@ -14,7 +14,8 @@ library(tidyverse)
 ```
 
 ```{r}
-df<-read.csv("data_twitter - Sheet2.CSV")
+df <- read_csv("data_twitter - Sheet2.csv")
+
 ```
 
 ```{r}
