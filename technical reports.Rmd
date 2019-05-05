@@ -153,25 +153,7 @@ ggplot(df, aes(x = type, fill = time, y = sum_engage)) +
 
 The side by side boxpot above tells us that there may be a main effect of time of day (morning posts seem to get more engagement than afternoon posts), and a main effect of post content (promotional posts get less engagement than informative and inspirational posts).
 
-
-###Parallel dot graph
-
-```{r,echo=FALSE, warning=FALSE, message=FALSE, include = TRUE}
-#looking at variability by condition
-ggplot(df, aes(x = type, color = time, y = sum_engage)) +
-    geom_jitter(height = 0.10, width = 0.05, alpha = .7)
-```
-
 ##Interaction effects
-
-```{r,echo=FALSE, warning=FALSE, message=FALSE, include = TRUE}
-ggplot(df, aes(x = type, 
-                    y = sum_engage, 
-                    color = time,
-                    group = time)) +
-  geom_point(size = 2) +
-  geom_smooth(method = "lm", se = 0)
-```
 
 The interaction graph indicates that first, there may be an interaction between type and time when the promotional type is included sinc the line of promotional posts is not parallel with the other two lines. Second, there is no interaction between type and time when the promotional type is excluded since the line of inspirational posts an the line of informative posts are parallel with each other. Third, there is a main effect of time of the day since the lines of inspirational and informative posts are upward sloping.
 
