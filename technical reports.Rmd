@@ -138,6 +138,198 @@ stargazer(data = df2, type = "text", title="Summary statistics of DV", digits=2,
 According to the summary statistics table, we only collect 18 observations in total and the amount of engagement might be too small to be informative and statistically meaningful. The mean amount of engagement is less than one (mean = 0.78)
 
 
+
+ 
+
+### Testing Assumptions - Assembly Line Metaphor
+
+#### Assembly Line Instructions
+
+Before analyzing the results, we first calculate the effects of all of our structural factors under the Fisher assumptions. The chunks of code below calculate all of the peices we'll need in our assembly line. Each chunk is a station. The Fisher assumptions are built into the way we are calculating our assembly line instructions and when simulating the data below. The six Fisher assumptions we test include constant effects(C), additive effects(A), same standard deviations (S), independent residuals (I), normally distributed residuals (N), and zero mean residuals (Z).
+
+Based on the discussions below, only the third assumption, S, is not violated.
+
+#####Constant 
+
+
+```{r}
+df <- df%>%
+  mutate(benchmark = mean(sum_engage)) #universal factor
+```
+
+```{r}
+df <- df %>%
+  group_by(type) %>%
+  mutate(type_mean = mean(sum_engage),
+         type_effect = type_mean - benchmark) 
+#for each level of type factor
+print(df$type_effect)
+```
+
+```{r}
+df <- df %>%
+  group_by(week) %>%
+  mutate(week_mean = mean(sum_engage),
+         week_effect = week_mean - benchmark) 
+#for each level of type factor
+print(df$week_effect)
+```
+
+```{r}
+df <- df %>%
+  group_by(day) %>%
+  mutate(day_mean = mean(sum_engage),
+         day_effect = day_mean - benchmark) 
+#for each level of type factor
+print(df$day_effect)
+```
+
+```{r}
+df <- df %>%
+  group_by(time) %>%
+  mutate(time_mean = mean(sum_engage),
+         time_effect = time_mean - benchmark) 
+#for each level of type factor
+print(df$time_effect)
+```
+
+```{r}
+df <- df %>%
+  group_by(cell) %>%
+  mutate(cell_mean = mean(sum_engage),
+         interaction_effect = cell_mean - (type_mean + time_mean - benchmark)) #for each cell of interaction
+print(df$interaction_effect)
+```
+
+From above, we could see that the assumption of constant effects is violated since not very observation in a similar condition is affected exactly the same. The week, day of week, type, and interaction effects are not constant.
+
+```{r}
+df<- df %>%
+  ungroup() %>%
+  mutate(residuals = sum_engage - (benchmark 
+                             + type_effect 
+                             + time_effect 
+                             + interaction_effect
+                             + day_effect
+                             + week_effect)
+                             )%>% #universal factor
+  select(-type_mean, -time_mean, 
+         -cell_mean, -day_mean, -week_mean) #removing the stuff we don't need
+
+
+```
+
+S: There should be one standard deviation for all the errors, so the peice of code for adding error is not dependent on which condition the observations is in. We consider this assumption violated if the SD of the biggest group is more than three times as big as the SD of the smallest group. Acccording to the summary statistics table, SDmax = 0.78 < 3*SDmin = 0.24, so this assumption is not violated. 
+
+I: To check for independence in my residuals if I have a within block treatment factor that has two levels, we should be looking for the points to fall along the y =x when making a scatterplot of observations for two levels of a within-block factor. In this case, we will test the assumption by plotting residuals against a time variables present (e.g., order of observation). A pattern that is not random suggests lack of independence. There is no observable pattern so the Independence assumption is not violated.
+
+
+```{r}
+library(dae)
+
+df<-df%>%
+ mutate(order = 1:18)
+
+ggplot(df, aes(x = order, y = residuals)) + 
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red")
+
+# ggplot(df2, aes(x = fitted(twitter), y = residuals(twitter))) + 
+#   geom_point() +
+#   geom_hline(yintercept = 0, color = "red")
+```
+
+N: The distribution of error sizes should follow a normal curve. According to the histogram below, this assumption is violated since the histogram is right-skewed. 
+
+```{r}
+ggplot(df, aes(x = residuals)) +
+    geom_histogram()
+```
+
+
+Z: The average of the tickets in the errpr box should be zero. As shown below, the mean residual is not zero but is really really close to zero so this assumption roughly holds.
+
+```{r}
+df$meanred<-mean(df$residuals)
+print(df$meanred)
+```
+
+
+```{r simulation}
+df<- df %>%
+  mutate(engage_sim = NA)
+
+df<- df %>%
+  mutate(engage_sim = benchmark 
+                             + type_effect 
+                             + time_effect 
+                             + interaction_effect
+                             + day_effect
+                             + week_effect
+                             + rnorm(12, 0, 0.65)) 
+```
+
+A: The pieces that go together to make the observed value should be combined by adding them, so we add the effects as we go down the assembly line. The interaction effect captures the possibility that conditions have non-additive effects, but it is also added to everything else. 
+
+Below we visualize the simulated data and compare the results with the visualizations of the actual data. As shown, the additive assumption seems to be violated since the simulated results are very different. 
+
+##### Parallel dot graph
+
+Real data:
+```{r}
+ggplot(df, aes(x = type, color = time, y = sum_engage)) +
+    geom_jitter(height = 0.10, width = 0.05, alpha = .7)
+```
+
+Simulated:
+```{r}
+ggplot(df, aes(x = type, color = time, y = engage_sim)) +
+    geom_jitter(height = 0.10, width = 0.05, alpha = .7)
+```
+
+##### Side-by-side Boxplots
+
+
+Real data:
+
+```{r,echo=FALSE, warning=FALSE, message=FALSE, include = TRUE}
+#looking at variability by condition
+ggplot(df, aes(x = type, fill = time, y = sum_engage)) +
+  geom_boxplot()
+
+```
+
+Simulated:
+```{r}
+ggplot(df, aes(x = type, fill = time, y = engage_sim)) +
+  geom_boxplot()
+```
+
+
+
+##Interaction effects
+Read data:
+```{r echo=FALSE, warning=FALSE, message=FALSE, include = TRUE}
+ggplot(df, aes(x = time, 
+                    y = sum_engage, 
+                    color = type,
+                    group = type)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", se = 0)
+```
+
+Simulated:
+```{r}
+ggplot(df, aes(x = type, 
+                    y = engage_sim, 
+                    color = time,
+                    group = time)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", se = 0)
+```
+`
+
+
 ##Informal Analysis
 
 Before conducting a formal analysis, we arrange a side by side boxplot and an interaction graph towith the categories either on the horizontal axis of the display to allow comparising between the different categories as well as comparison within categories.
@@ -152,6 +344,14 @@ ggplot(df, aes(x = type, fill = time, y = sum_engage)) +
 ```
 
 The side by side boxpot above tells us that there may be a main effect of time of day (morning posts seem to get more engagement than afternoon posts), and a main effect of post content (promotional posts get less engagement than informative and inspirational posts).
+
+###Parallel dot plot
+
+```{r}
+ggplot(df, aes(x = type, color = time, y = sum_engage)) +
+    geom_jitter(height = 0.10, width = 0.05, alpha = .7)
+```
+
 
 ##Interaction effects
 
@@ -215,6 +415,9 @@ library(kableExtra)
 kable(anova2, digits = 3, format = "html", booktabs = T,col.names = c("Df","Sum Sq","Mean Sq","F value"," Pr(>F)"," "))%>%
   kable_styling(full_width = F, font_size = 12)%>%add_footnote("Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1", notation="alphabet")%>%column_spec(1, width = "5em") 
 ```
+
+
+
 
 Excluding promotional posts, we could see from the table above that there is not a significant main effect of post type. Interaction between type and time was not significant as well. However, time of posting is significantly associated with engagement. Specifically, morning posts obtain more engagements than afternoon posts. 
 
