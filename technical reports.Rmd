@@ -51,44 +51,7 @@ After wrapping up the experiment, we calculate the averages to compare the overa
 
 The Executive Education Assistants created the content in advance of the study, and they contacted Jill directly for approval. 
 
-Below is a preview of the posts:
-
-Week1:
-April 3rd- Informative
-
-![](posts/p1.jpg){ width=40% }
-
-
-April 4th- Promotional
-![](posts/p2.jpg){ width=40% }
-
-
-April 5th- Inspirational
-![](posts/p3.jpg){ width=40% }
-
-Week2:
-April 10th- Inspirational
-
-![](posts/p4.jpg){ width=40% }
-
-April 11th- Informative
-
-![](posts/p5.jpg){ width=40% }
-
-April 12th- Promotional
-![](posts/p6.jpg){ width=40% }
-Week3:
-April 17th- Promotional
-
-![](posts/p7.jpg){ width=70% }
-April 18th- Inspirational
-![](posts/p8.jpg){ width=70% }
-April 19th- Informative
-
-![](posts/p9.jpg){ width=70% }
-
-
-
+A preview of the posts could be found in the appendix.
 
 #Results
 
@@ -129,10 +92,14 @@ df2<-as.data.frame(df)%>%
   select(sum_engage,likes_48,retweets_48,comments_48,type)
 ```
 
-```{r,echo=FALSE, warning=FALSE, message=FALSE, include = TRUE}
+```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
 library(stargazer)
-stargazer(data = df2, type = "text", title="Summary statistics of DV", digits=2, out="tablesum.html",covariate.labels = c("Total Engagement","#Likes","#Retweets","#Comments","type"))
+stargazer(data = df2, type = "html", title="Summary statistics of DV", digits=2, out="tablesum.html",covariate.labels = c("Total Engagement","#Likes","#Retweets","#Comments","type"))
 
+```
+
+```{r, out.width='60%', fig.align='center', include = TRUE, echo = FALSE}
+knitr::include_graphics('sum.png')
 ```
 
 According to the summary statistics table, we only collect 18 observations in total and the amount of engagement might be too small to be informative and statistically meaningful. The mean amount of engagement is less than one (mean = 0.78)
@@ -426,3 +393,38 @@ In a word, the parallel box-plot and ANOVA indicate the statistically significan
 
 
 #Conclusion
+
+#Appendix
+
+
+
+![April 3rd- Informative](posts/p1.jpg){ width=40% }
+
+
+
+
+![April 4th- Promotional](posts/p2.jpg){ width=40% }
+
+
+
+![April 5th- Inspirational](posts/p3.jpg){ width=40% }
+
+
+
+![April 10th- Inspirational](posts/p4.jpg){ width=40% }
+
+
+
+![April 11th- Informative](posts/p5.jpg){ width=40% }
+
+
+![April 12th- Promotional](posts/p6.jpg){ width=40% }
+
+
+
+![April 17th- Promotional](posts/p7.jpg){ width=40% }
+
+![April 18th- Inspirational](posts/p8.jpg){ width=40% }
+
+
+![April 19th- Informative](posts/p9.jpg){ width=40% }
