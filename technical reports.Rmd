@@ -55,7 +55,7 @@ A preview of the posts could be found in the appendix.
 
 #Results
 
-##summary statistics
+##Summary statistics
 
 ```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
 library(dplyr)
@@ -98,7 +98,7 @@ stargazer(data = df2, type = "html", title="Summary statistics of DV", digits=2,
 
 ```
 
-```{r, out.width='60%', fig.align='center', include = TRUE, echo = FALSE}
+```{r, out.width='70%', fig.align='center', include = TRUE, echo = FALSE}
 knitr::include_graphics('sum.png')
 ```
 
