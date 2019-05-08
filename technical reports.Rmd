@@ -56,7 +56,7 @@ Several graphs, including side by side boxplots and an interaction graph, were e
 
 #Results
 
-In this section, we summarize the data collected and discuss the results of the informal analysis and the analysis of variance. We start by presenting the summary statistics of the data sets, analyzing each graph, and then proceed to test our hypothesis by analyzing the relationships among variables based on the anova table.
+In this section, we summarize the data collected and discuss the results of the informal analysis and the analysis of variance. We start by presenting the summary statistics of the data sets, analyzing each graph, and then proceed to test our hypothesis by analyzing the relationships among variables based on the ANOVA table.
 
 ##Summary statistics
 
@@ -78,11 +78,11 @@ knitr::include_graphics('sum.png')
 ```
 
 
-According to the summary statistics table, we only collect 18 observations in total and the amount of engagement might be too small to be informative and statistically meaningful. The mean amount of engagement is less than one (mean = 0.78)
+We collected 18 observations in total. The mean amount of engagement is less than one (mean = 0.78), which may indicate insufficient data for significant statistical analyses.
 
 ##Informal Analysis
 
-Before conducting a formal analysis, we arrange a side by side boxplot and an interaction graph with the categories on the horizontal axis of the display to allow comparison between the different categories as well as comparison within categories.
+Before conducting a formal analysis, we arranged a side by side boxplot and an interaction graph with the categories on the horizontal axis of the display to allow comparison between the different categories as well as comparison within categories.
 
 ###Side by side boxplot
 
@@ -95,11 +95,11 @@ ggplot(df, aes(x = type, fill = time, y = sum_engage)) +
 ```
 
 
-The side by side boxplot above tells us that there may be a main effect of time of day (morning posts seem to get more engagement than afternoon posts) since green boxes are above red boxes regardless of post types. In addition, there may be a main effect of post content (promotional posts get less engagement than informative and inspirational posts) since both the green box and red box of the inspirational type are high than those of the informative type.
+The side by side boxplot above tells us that there may be a main effect of time of day (morning posts seem to get more engagement than afternoon posts) since green boxes are above red boxes regardless of post types. In addition, there may be a main effect of post content (informative posts get less engagement than inspirational posts). However, we figured out that promotional posts have zero engagement, which violated same standard deviation and normality assumptions. Further tests were required to check if any assumption was violated
 
 ##Interaction effects
 
-The interaction graph indicates that first, there may be an interaction between type and time when the promotional type is included since the line of promotional posts is not parallel with the other two lines. Second, there is no interaction between type and time when the promotional type is excluded since the line of inspirational posts an the line of informative posts are parallel with each other. Third, there may be a main effect of time of the day since the lines of inspirational and informative posts are upward sloping.
+The interaction graph indicates that first, there may be an interaction between type and time when the promotional type is included since the line of promotional posts is not parallel with the other two lines. Second, there appears to be no interaction between type and time when the promotional type is excluded since the line of inspirational posts and the line of informative posts are parallel with each other. Third, there may be a main effect of time of the day since the lines of inspirational and informative posts are upward sloping.
 
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE, include = TRUE}
@@ -112,75 +112,10 @@ ggplot(df, aes(x = time,
 ```
 
 
-##ANOVA
+## Assumptions testing 
 
-To look more deeply into the impacts of these variables on the amount of people's engagement on twitter and add more control variables, we conduct the analysis of variance (ANOVA) to decide if the effects of these variables are real. Since our assumptions about residuals (Same SD and Normally Distributed Residuals) are violated by the promotional group, we exclude this group from our formal ANOVA.
+Before conducting an analysis of variance on our data, the Fisher assumptions had to be validated. The chunks of code below also calculate all of the pieces we'll need in our assembly line since the Fisher assumptions are built into the way we are calculating our assembly line instructions and when simulating the data below. The six Fisher assumptions we tested are constant effects(C), additivity (A), same standard deviations (S), independent residuals (I), normally distributed residuals (N), and zero mean residuals (Z). 
 
-```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
-df2<-df%>%
-  filter(type =="informative"| type =="inspirational")
-```
-
-```{r,echo=FALSE, warning=FALSE, message=FALSE, include = TRUE}
-twitter <- aov(sum_engage ~ type+time+day+week+type*time, data = df2)
-
-anova1<-anova(twitter)
-summary(twitter)
-```
-
-```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
-is.num <- sapply(anova1, is.numeric)
-anova1[is.num] <- lapply(anova1[is.num], round, 3)
-anova1[4,5]<-"0.250"
-anova1[1,5]<-"0.230"
-anova1[1,6]<-""
-anova1[2,6]<-"*"
-anova1[3,6]<-"*"
-anova1[4,6]<-" "
-anova1[5,6]<-" "
-anova1[6,6]<-" "
-anova1[6,5]<-" "
-anova1[6,4]<-" "
-anova2<-anova1[1:6,]
-
-```
-
-```{r,echo=FALSE, warning=FALSE, message=FALSE, include =TRUE}
-library(kableExtra)
-kable(anova2, digits = 3, format = "html", booktabs = T,col.names = c("Df","Sum Sq","Mean Sq","F value"," Pr(>F)"," "))%>%
-  kable_styling(full_width = F, font_size = 12)%>%add_footnote("Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1", notation="alphabet")%>%column_spec(1, width = "5em") 
-```
-
-
-Excluding promotional posts, we could see from the table above that there is not a significant main effect of post type (p=0.23) on the level of engagement. The interaction graph and ANOVA table (excluding promotional posts) indicate the interaction effect of type and time is not statistically significant (p=1). However, the anova shows that time of posting is significantly associated with engagement (p=0.047) as shown on the parallel box-plot. Specifically, morning posts obtain more engagements than afternoon posts. 
-
-Moreover, the ANOVA table also indicates a statistically significant effect of day of the week (p=0.016) on the amount of engagement with the posts. Upon closer inspection, however, we see that Thursdays have no engagement and the most amount of engagement occur on Wednesday. This may indicate that people are more active on Wednesday, following by Friday and Thursday. However, the significance of this finding may not be valid, given that no engagement for one group violates the assumptions for residuals.
-
-```{r}
-# confint(twitter)
-# 
-# sdpooled.calc <- sqrt(anova(twitter)["Residuals", "Mean Sq"]) 
-# mcalc <- mean(df2$sum_engage) 
-# ncalc <- length(df2$sum_engage) 
-# t.crit <- qt(p = .05/2, df = 12, lower.tail=FALSE) 
-# 
-# #then if memory serves the CI for means formula is 
-# 
-# mcalc - ((t.crit * sdpooled.calc)/sqrt(ncalc)) 
-# mcalc + ((t.crit * sdpooled.calc)/sqrt(ncalc)) 
-
-```
-
-
-In a word, only the second hypothesis that posts in the morning (8:30 am) would have more engagement than those in the afternoon (4:30 pm) is supported by the current result. The impact of type of post and its interaction with time of day are not statistically significant. Nevertheless, the significance of the current findings is worth more investigation since the amount of data collected by the current study is insufficient.
-
-
-
-# Assumptions testing 
-
-After analyzing the results, we first calculate the effects of all of our structural factors under the Fisher assumptions. The chunks of code below also calculate all of the pieces we'll need in our assembly line since the Fisher assumptions are built into the way we are calculating our assembly line instructions and when simulating the data below. The six Fisher assumptions we test include constant effects(C), same standard deviations (S), independent residuals (I), normally distributed residuals (N), and zero mean residuals (Z). The assumptions are tested before promotional type is excluded since it is part of our design.
-
-Based on the discussions below, the assumptions about additive effects, standard deviations, and normally distributed residuals are violated.
 
 
 ```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
@@ -257,9 +192,10 @@ df <- df %>%
          interaction_effect = cell_mean - (type_mean + time_mean - benchmark)) #for each cell of interaction
 print(df$interaction_effect)
 ```
+###Constant Effects & Additivity
 
+Constant effects and additivity mean that there is one underlying true value and that the effects of each group are added to this value. We find that posts of similar types obtain similar amounts of engagement, supporting the assumption of constant effects. The different means for each group allow us to calculate the “group effects”, which is the amount added to the underlying true value.
 
-C: From above, we could see that the assumption of constant effects (C) is not violated since very observation in a similar condition is affected exactly the same. For example, the type effects for three levels of the type factors are the same.
 
 ```{r}
 df<- df %>%
@@ -275,9 +211,11 @@ df<- df %>%
          -cell_mean, -day_mean, -week_mean) #removing the stuff we don't need
 ```
 
-A: The pieces that go together to make the observed value should be combined by adding them, so we add the effects as we go down the assembly line. As you can see from the chunk of codes above, the predicted sum level of engagement is obtained by adding up benchmark and all the effects of predictor variables.  
+The pieces that go together to make the observed value should be combined by adding them, so we add the effects as we go down the assembly line. The predicted level of engagement is obtained by adding up the benchmark and all the effects of predictor variables.  
 
-S: There should be one standard deviation for all the errors, so the piece of code for adding error is not dependent on which condition the observations is in. We consider this assumption violated if the SD of the biggest group is more than three times as big as the SD of the smallest group. According to the tables below, SDmax = 1.15 < 3*SDmin = 0, so this assumption is violated. Since the SD is zero only for promotional type of posts, we decide to exclude this type from the data in the results section.
+###Assumptions About Residuals
+
+This assumption relies on all groups having similar standard deviations. We consider this assumption violated if the SD of the biggest group is more than three times as large as the SD of the smallest group. According to the tables below, the group with the smallest SD has a SD of 0 (due to no engagement). No standard deviation means that the variance of this condition cannot be tested, so this assumption is violated. Since the SD is zero only for promotional type of posts, we decide to exclude this type from the ANOVA.
 
 ```{r}
 favstats(sum_engage ~time+type, data=df)
@@ -292,8 +230,8 @@ favstats(sum_engage ~type , data=df)
 favstats(sum_engage ~time , data=df)
 ```
 
-I: To check for independence in the residuals, we will test the assumption by plotting residuals against a time variables present (e.g., order of observation). A pattern that is not random suggests lack of independence. However, There is no observable pattern according to the graph below, so the Independence assumption is not violated. In addition, we randomly assign posts to each time and type condition, so the residuals are independent from each other.
-
+To check for independence in the residuals, we plotted residuals against a time variables present (e.g., order of observation). A pattern that is not random suggests lack of independence. There is no observable pattern according to the graph below, so the Independence assumption is not violated. In addition, we randomly assign posts to each time and type condition, so the residuals are independent from each other.
+It is possible, however, that the residuals are not completely independent for the time of day factor. For this study, we posted the same post twice in one day. The level of engagement with afternoon posts, therefore, may be somewhat dependent on the level of engagement with morning posts. Despite this potential violation, we decided to proceed with the study. Future ways to address this are mentioned in the discussion section.
 
 
 ```{r}
@@ -308,17 +246,77 @@ ggplot(df2, aes(x = residuals)) +
 
 ```
 
-
-N: The distribution of error sizes should follow a normal curve. According to the histogram above, this assumption is violated since the histogram does not have a bell shape and we have no observation for the promotional type of post. 
+The distribution of error sizes should follow a normal curve. According to the histogram above, this assumption is violated since the histogram does not have a bell shape and we have no observation for the promotional type of post. For this reason, along with the lack of standard deviation for the promotional group, promotional posts were excluded from our formal analysis.
 
 
 ```{r}
 
 qqnorm(twitter$residuals)
 ```
+The average of errors should be zero. This means that the average of a set of observed values should tend to fall near the underlying true value. According to the histogram graph and Q-Qplot, the average of the errors is zero and the dots/bars are distributed around zero.
 
 
-Z: The average of the tickets in the error box should be zero. This means that the average of a set of observed values should tend to fall near the underlying true value. According to the histogram graph and Q-Qplot, the average of the tickets in the error box is zero and the dot/bars are distributed around zero.
+##ANOVA
+
+To look more deeply into the impacts of these variables on the amount of people's engagement on twitter and add more control variables, we conducted the analysis of variance (ANOVA) to decide if the effects of these variables are real. Since our assumptions about residuals (Same SD and Normally Distributed Residuals) are violated by the promotional group, we excluded this group from our formal ANOVA.
+
+```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
+df2<-df%>%
+  filter(type =="informative"| type =="inspirational")
+```
+
+```{r,echo=FALSE, warning=FALSE, message=FALSE, include = TRUE}
+twitter <- aov(sum_engage ~ type+time+day+week+type*time, data = df2)
+
+anova1<-anova(twitter)
+summary(twitter)
+```
+
+```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
+is.num <- sapply(anova1, is.numeric)
+anova1[is.num] <- lapply(anova1[is.num], round, 3)
+anova1[4,5]<-"0.250"
+anova1[1,5]<-"0.230"
+anova1[1,6]<-""
+anova1[2,6]<-"*"
+anova1[3,6]<-"*"
+anova1[4,6]<-" "
+anova1[5,6]<-" "
+anova1[6,6]<-" "
+anova1[6,5]<-" "
+anova1[6,4]<-" "
+anova2<-anova1[1:6,]
+
+```
+
+```{r,echo=FALSE, warning=FALSE, message=FALSE, include =TRUE}
+library(kableExtra)
+kable(anova2, digits = 3, format = "html", booktabs = T,col.names = c("Df","Sum Sq","Mean Sq","F value"," Pr(>F)"," "))%>%
+  kable_styling(full_width = F, font_size = 12)%>%add_footnote("Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1", notation="alphabet")%>%column_spec(1, width = "5em") 
+```
+
+
+Excluding promotional posts, we could see from the table above that there is not a significant main effect of post type (p=0.23) on the level of engagement. The interaction graph and ANOVA table (excluding promotional posts) indicate the interaction effect of type and time is not statistically significant (p=1). However, the ANOVA shows that time of posting is significantly associated with engagement (p=0.047) as shown on the parallel box-plot. Specifically, morning posts obtain more engagements than afternoon posts. 
+
+Although day of week was a nuisance variable, the ANOVA table also indicates a statistically significant effect of day of the week (p=0.016) on the amount of engagement with the posts. Wednesdays received the highest engagement. Upon closer inspection, however, we see that Thursdays have no engagement, therefore the Thursday group violates the assumptions of same SD and normality of residuals. The significance of this finding, therefore, may not be valid due to violation of assumptions.
+
+Based on our findings, only the second hypothesis that posts in the morning (8:30 am) would have more engagement than those in the afternoon (4:30 pm) is supported by the current result. The impact of type of post and its interaction with time of day are not statistically significant. 
+
+
+```{r, echo=FALSE, eval=FALSE}
+#confint(twitter)
+# 
+# sdpooled.calc <- sqrt(anova(twitter)["Residuals", "Mean Sq"]) 
+# mcalc <- mean(df2$sum_engage) 
+# ncalc <- length(df2$sum_engage) 
+# t.crit <- qt(p = .05/2, df = 12, lower.tail=FALSE) 
+# 
+# #then if memory serves the CI for means formula is 
+# 
+# mcalc - ((t.crit * sdpooled.calc)/sqrt(ncalc)) 
+# mcalc + ((t.crit * sdpooled.calc)/sqrt(ncalc)) 
+
+```
 
 
 #Discussion and Conclusion
