@@ -318,7 +318,7 @@ qqnorm(twitter$residuals)
 ```
 
 
-Z: The average of the tickets in the error box should be zero. This means that the average of a set of observed values should tend to fall near the underlying true value. According to the graph, the average of the tickets in the error box is zero and the dots are clustering around zero.
+Z: The average of the tickets in the error box should be zero. This means that the average of a set of observed values should tend to fall near the underlying true value. According to the histogram graph and Q-Qplot, the average of the tickets in the error box is zero and the dot/bars are distributed around zero.
 
 
 #Discussion and Conclusion
