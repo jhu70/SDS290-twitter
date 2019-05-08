@@ -173,18 +173,6 @@ favstats(sum_engage ~time , data=df)
 I: To check for independence in the residuals, we will test the assumption by plotting residuals against a time variables present (e.g., order of observation). A pattern that is not random suggests lack of independence. However, There is no observable pattern according to the graph below, so the Independence assumption is not violated. In addition, we randomly assign posts to each time and type condition, so the residuals are independent from each other.
 
 
-```{r}
-library(dae)
-
-df<-df%>%
- mutate(order = 1:18)
-
-ggplot(df, aes(x = order, y = residuals)) + 
-  geom_point() +
-  geom_hline(yintercept = 0, color = "red")
-
-```
-
 
 ```{r}
 df2 <- df2%>%
@@ -316,6 +304,22 @@ kable(anova2, digits = 3, format = "html", booktabs = T,col.names = c("Df","Sum 
 Excluding promotional posts, we could see from the table above that there is not a significant main effect of post type (p=0.23) on the level of engagement. The interaction graph and ANOVA table (excluding promotional posts) indicate the interaction effect of type and time is not statistically significant (p=1). However, the anova shows that time of posting is significantly associated with engagement (p=0.047) as shown on the parallel box-plot. Specifically, morning posts obtain more engagements than afternoon posts. 
 
 Moreover, the ANOVA table also indicates a statistically significant effect of day of the week (p=0.016) on the amount of engagement with the posts. Upon closer inspection, however, we see that Thursdays have no engagement and the most amount of engagement occur on Wednesday. This may indicate that people are more active on Wednesday, following by Friday and Thursday. However, the significance of this finding may not be valid, given that no engagement for one group violates the assumptions for residuals.
+
+```{r}
+# confint(twitter)
+# 
+# sdpooled.calc <- sqrt(anova(twitter)["Residuals", "Mean Sq"]) 
+# mcalc <- mean(df2$sum_engage) 
+# ncalc <- length(df2$sum_engage) 
+# t.crit <- qt(p = .05/2, df = 12, lower.tail=FALSE) 
+# 
+# #then if memory serves the CI for means formula is 
+# 
+# mcalc - ((t.crit * sdpooled.calc)/sqrt(ncalc)) 
+# mcalc + ((t.crit * sdpooled.calc)/sqrt(ncalc)) 
+
+```
+
 
 In a word, only the second hypothesis that posts in the morning (8:30 am) would have more engagement than those in the afternoon (4:30 pm) is supported by the current result. The impact of type of post and its interaction with time of day are not statistically significant. Nevertheless, the significance of the current findings is worth more investigation since the amount of data collected by the current study is insufficient. 
 
