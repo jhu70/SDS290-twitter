@@ -55,9 +55,9 @@ Several graphs, including side by side boxplots and an interaction graph, were e
 
 
 
-# Assumptions testing - assembly Line Metaphor
+# Assumptions testing 
 
-Before analyzing the results, we first calculate the effects of all of our structural factors under the Fisher assumptions. The chunks of code below calculate all of the pieces we'll need in our assembly line. Each chunk is a station. The Fisher assumptions are built into the way we are calculating our assembly line instructions and when simulating the data below. The six Fisher assumptions we test include constant effects(C), same standard deviations (S), independent residuals (I), normally distributed residuals (N), and zero mean residuals (Z). The assumptions are tested before promotional type is excluded since it is part of our design.
+Before analyzing the results, we first calculate the effects of all of our structural factors under the Fisher assumptions. The chunks of code below also calculate all of the pieces we'll need in our assembly line since the Fisher assumptions are built into the way we are calculating our assembly line instructions and when simulating the data below. The six Fisher assumptions we test include constant effects(C), same standard deviations (S), independent residuals (I), normally distributed residuals (N), and zero mean residuals (Z). The assumptions are tested before promotional type is excluded since it is part of our design.
 
 Based on the discussions below, the assumptions about additive effects, standard deviations, and normally distributed residuals are violated.
 
@@ -138,6 +138,8 @@ print(df$interaction_effect)
 ```
 
 
+C: From above, we could see that the assumption of constant effects (C) is not violated since very observation in a similar condition is affected exactly the same. For example, the type effects for three levels of the type factors are the same.
+
 ```{r}
 df<- df %>%
   ungroup() %>%
@@ -150,34 +152,25 @@ df<- df %>%
                              )%>% #universal factor
   select(-type_mean, -time_mean, 
          -cell_mean, -day_mean, -week_mean) #removing the stuff we don't need
-
-
 ```
 
 A: The pieces that go together to make the observed value should be combined by adding them, so we add the effects as we go down the assembly line. As you can see from the chunk of codes above, the predicted sum level of engagement is obtained by adding up benchmark and all the effects of predictor variables.  
 
+S: There should be one standard deviation for all the errors, so the piece of code for adding error is not dependent on which condition the observations is in. We consider this assumption violated if the SD of the biggest group is more than three times as big as the SD of the smallest group. According to the tables below, SDmax = 1.15 < 3*SDmin = 0, so this assumption is violated. Since the SD is zero only for promotional type of posts, we decide to exclude this type from the data in the results section.
 
 ```{r}
-sum_stats <- df %>%
-  group_by(type, time) %>%
-  summarise(mean = mean(sum_engage),
-            sd = sd(sum_engage),
-            min = min(sum_engage),
-            max = max(sum_engage),
-            range = max - min) %>%
-  arrange(range)
-
- sum_stats
+favstats(sum_engage ~time+type, data=df)
 ```
-
-S: There should be one standard deviation for all the errors, so the piece of code for adding error is not dependent on which condition the observations is in. We consider this assumption violated if the SD of the biggest group is more than three times as big as the SD of the smallest group. According to the summary statistics table, SDmax = 0.78 < 3*SDmin = 0, so this assumption is violated. 
 
 ```{r}
-favstats(sum_engage ~type+time , data=df)
+favstats(sum_engage ~type , data=df)
 ```
 
+```{r}
+favstats(sum_engage ~time , data=df)
+```
 
-I: To check for independence in the residuals, we will test the assumption by plotting residuals against a time variables present (e.g., order of observation). A pattern that is not random suggests lack of independence. However, There is no observable pattern according to the graph below, so the Independence assumption is not violated. In addition, we randomly assign posts to each time and type condition, so the residuals are independent from each otger.
+I: To check for independence in the residuals, we will test the assumption by plotting residuals against a time variables present (e.g., order of observation). A pattern that is not random suggests lack of independence. However, There is no observable pattern according to the graph below, so the Independence assumption is not violated. In addition, we randomly assign posts to each time and type condition, so the residuals are independent from each other.
 
 
 ```{r}
@@ -194,92 +187,31 @@ ggplot(df, aes(x = order, y = residuals)) +
 
 
 ```{r}
-ggplot(df, aes(x = residuals)) +
-    geom_histogram()
+df2 <- df2%>%
+  mutate(residuals = residuals(twitter),
+         SD = sd(residuals))
+         
+ggplot(df2, aes(x = residuals)) +
+  geom_histogram(bins = 10) +
+  geom_vline(aes(xintercept = SD), color = "blue") +
+  geom_vline(aes(xintercept = -SD), color = "blue")
+
 ```
 
 
-N: The distribution of error sizes should follow a normal curve. According to the histogram above, this assumption is violated since the histogram is right-skewed and we have no observation for the promotional type of post. 
+N: The distribution of error sizes should follow a normal curve. According to the histogram above, this assumption is violated since the histogram does not have a bell shape and we have no observation for the promotional type of post. 
 
-C: From above, we could see that the assumption of constant effects (C) is not violated since very observation in a similar condition is affected exactly the same. For example, the type effects for three levels of the type factors are the same.
-
-Z: The average of the tickets in the error box should be zero. As shown below, the mean residual is not zero but is really really close to zero so this assumption roughly holds.
 
 ```{r}
-df$meanred<-mean(df$residuals)
-print(df$meanred)
+
+qqnorm(twitter$residuals)
 ```
 
 
-```{r simulation}
-df<- df %>%
-  mutate(engage_sim = NA)
+Z: The average of the tickets in the error box should be zero. This means that the average of a set of observed values should tend to fall near the underlying true value. According to the graph, the average of the tickets in the error box is zero. Whenever we substract the average from a set of numbers, the leftover from the average will add to zero. Z is valid.
 
-df<- df %>%
-  mutate(engage_sim = benchmark 
-                             + type_effect 
-                             + time_effect 
-                             + interaction_effect
-                             + day_effect
-                             + week_effect
-                             + rnorm(12, 0, 0.65)) 
-```
- 
+the mean residual is not zero but is really really close to zero so this assumption roughly holds since the dots are clustering around zero.
 
-### Parallel dot graph
-
-Real data:
-```{r}
-ggplot(df, aes(x = type, color = time, y = sum_engage)) +
-    geom_jitter(height = 0.10, width = 0.05, alpha = .7)
-```
-
-Simulated:
-```{r}
-ggplot(df, aes(x = type, color = time, y = engage_sim)) +
-    geom_jitter(height = 0.10, width = 0.05, alpha = .7)
-```
-
-##### Side-by-side Boxplots
-
-Real data:
-
-```{r,echo=FALSE, warning=FALSE, message=FALSE, include = TRUE}
-#looking at variability by condition
-ggplot(df, aes(x = type, fill = time, y = sum_engage)) +
-  geom_boxplot()
-
-```
-
-Simulated:
-```{r}
-ggplot(df, aes(x = type, fill = time, y = engage_sim)) +
-  geom_boxplot()
-```
-
-
-
-##Interaction effects
-Read data:
-```{r echo=FALSE, warning=FALSE, message=FALSE, include = TRUE}
-ggplot(df, aes(x = time, 
-                    y = sum_engage, 
-                    color = type,
-                    group = type)) +
-  geom_point(size = 2) +
-  geom_smooth(method = "lm", se = 0)
-```
-
-Simulated:
-```{r}
-ggplot(df, aes(x = type, 
-                    y = engage_sim, 
-                    color = time,
-                    group = time)) +
-  geom_point(size = 2) +
-  geom_smooth(method = "lm", se = 0)
-```
-`
 
 #Results
 
@@ -355,16 +287,7 @@ twitter <- aov(sum_engage ~ type+time+day+week+type*time, data = df2)
 
 anova1<-anova(twitter)
 summary(twitter)
-
-#favstats(sum_engage~type|time, data = df2)
-
-# library(mosaic)
-# tally(~time|as.character(type), data = df2)
-# 
-# df2$type
 ```
-
-
 
 ```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
 is.num <- sapply(anova1, is.numeric)
