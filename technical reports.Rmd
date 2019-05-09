@@ -60,8 +60,38 @@ In this section, we summarize the data collected and discuss the results of the 
 
 ##Summary statistics
 
+
+```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
+library(dplyr)
+library(mosaic)
+library(ggplot2)
+library(readr)
+library(tidyr)
+library(tidyverse)
+```
+
+```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
+df <- read_csv("data_twitter - Sheet2.csv")
+```
+
+```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
+day <- c("Wed","Wed","Thurs","Thurs","Fri","Fri","Wed","Wed","Thurs","Thurs","Fri","Fri","Wed","Wed","Thurs","Thurs","Fri","Fri")
+week <- c(rep("1", 6),                                  rep("2",6), rep("3",6))
+df<-cbind(day,df)
+df<-cbind(week,df)
+
+```
+
+```{r sum_engage,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
+df<-df%>%
+  mutate(sum_engage=likes_48+retweets_48+comments_48)%>%
+  unite(cell, time, type,remove=FALSE)
+```
+
+
 ```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
 library(tidyverse)
+library(dplyr)
 df2<-as.data.frame(df)%>%
   na.omit()%>%
   select(sum_engage,likes_48,retweets_48,comments_48,type)
@@ -116,34 +146,6 @@ ggplot(df, aes(x = time,
 
 Before conducting an analysis of variance on our data, the Fisher assumptions had to be validated. The chunks of code below also calculate all of the pieces we'll need in our assembly line since the Fisher assumptions are built into the way we are calculating our assembly line instructions and when simulating the data below. The six Fisher assumptions we tested are constant effects(C), additivity (A), same standard deviations (S), independent residuals (I), normally distributed residuals (N), and zero mean residuals (Z). 
 
-
-
-```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
-library(dplyr)
-library(mosaic)
-library(ggplot2)
-library(readr)
-library(tidyr)
-library(tidyverse)
-```
-
-```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
-df <- read_csv("data_twitter - Sheet2.csv")
-```
-
-```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
-day <- c("Wed","Wed","Thurs","Thurs","Fri","Fri","Wed","Wed","Thurs","Thurs","Fri","Fri","Wed","Wed","Thurs","Thurs","Fri","Fri")
-week <- c(rep("1", 6),                                  rep("2",6), rep("3",6))
-df<-cbind(day,df)
-df<-cbind(week,df)
-
-```
-
-```{r sum_engage,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
-df<-df%>%
-  mutate(sum_engage=likes_48+retweets_48+comments_48)%>%
-  unite(cell, time, type,remove=FALSE)
-```
 
 
 ```{r}
@@ -232,6 +234,20 @@ favstats(sum_engage ~time , data=df)
 
 To check for independence in the residuals, we plotted residuals against a time variables present (e.g., order of observation). A pattern that is not random suggests lack of independence. There is no observable pattern according to the graph below, so the Independence assumption is not violated. In addition, we randomly assign posts to each time and type condition, so the residuals are independent from each other.
 It is possible, however, that the residuals are not completely independent for the time of day factor. For this study, we posted the same post twice in one day. The level of engagement with afternoon posts, therefore, may be somewhat dependent on the level of engagement with morning posts. Despite this potential violation, we decided to proceed with the study. Future ways to address this are mentioned in the discussion section.
+
+
+
+```{r,echo=FALSE, warning=FALSE, message=FALSE, include = FALSE}
+df2<-df%>%
+  filter(type =="informative"| type =="inspirational")
+```
+
+```{r,echo=FALSE, warning=FALSE, message=FALSE, include = TRUE}
+twitter <- aov(sum_engage ~ type+time+day+week+type*time, data = df2)
+
+anova1<-anova(twitter)
+summary(twitter)
+```
 
 
 ```{r}
