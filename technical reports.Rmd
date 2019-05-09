@@ -319,21 +319,6 @@ Although day of week was a nuisance variable, the ANOVA table also indicates a s
 Based on our findings, only the second hypothesis that posts in the morning (8:30 am) would have more engagement than those in the afternoon (4:30 pm) is supported by the current result. The impact of type of post and its interaction with time of day are not statistically significant. 
 
 
-```{r, echo=FALSE, eval=FALSE}
-#confint(twitter)
-# 
-# sdpooled.calc <- sqrt(anova(twitter)["Residuals", "Mean Sq"]) 
-# mcalc <- mean(df2$sum_engage) 
-# ncalc <- length(df2$sum_engage) 
-# t.crit <- qt(p = .05/2, df = 12, lower.tail=FALSE) 
-# 
-# #then if memory serves the CI for means formula is 
-# 
-# mcalc - ((t.crit * sdpooled.calc)/sqrt(ncalc)) 
-# mcalc + ((t.crit * sdpooled.calc)/sqrt(ncalc)) 
-
-```
-
 
 #Discussion and Conclusion
 
